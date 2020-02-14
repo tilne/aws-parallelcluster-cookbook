@@ -7,19 +7,17 @@ provides :install_pyenv
 
 property :user, String, name_property: true
 property :python_version, String, required: true
+property :install_path, String, default: lazy { ::File.join(::File.expand_path("~#{user}"), '.pyenv') }
 
 default_action :run
 
 action :run do
-  home_dir = ::File.expand_path("~#{new_resource.user}")
-  user_prefix = ::File.join(home_dir, '.pyenv')
-
-  unless ::File.directory?(::File.join(user_prefix, 'versions', new_resource.python_version))
+  unless ::File.directory?(::File.join(new_resource.install_path, 'versions', new_resource.python_version))
     # Install required packages
     package node['cfncluster']['pyenv_packages']
 
     # Install pyenv
-    git user_prefix do
+    git new_resource.install_path do
       repository 'https://github.com/pyenv/pyenv.git'
       reference  'master'
       user       new_resource.user
@@ -28,7 +26,7 @@ action :run do
     end
 
     # Install pyenv's virtualenv plugin
-    git ::File.join(user_prefix, 'plugins', 'virtualenv') do
+    git ::File.join(new_resource.install_path, 'plugins', 'virtualenv') do
       repository  'https://github.com/pyenv/pyenv-virtualenv'
       reference   'master'
       user        new_resource.user
@@ -39,7 +37,7 @@ action :run do
     # Install desired version of python
     pyenv_command "install #{new_resource.python_version}" do
       user new_resource.user
-      pyenv_path user_prefix
+      pyenv_path new_resource.install_path
     end
   end
 end

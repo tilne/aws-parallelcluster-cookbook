@@ -5,8 +5,8 @@ provides :pyenv_command
 
 property :command, String, name_property: true
 property :user, String, required: true
-property :pyenv_path, String, required: true
 property :home_dir, String, default: lazy { ::File.expand_path("~#{user}") }
+property :pyenv_path, String, default: lazy { ::File.join(home_dir, ".pyenv") }
 
 action :run do
   cmd_env = {
