@@ -18,6 +18,11 @@
 # This recipe install the prerequisites required to use NICE DCV on a Linux server
 # Source: https://docs.aws.amazon.com/en_us/dcv/latest/adminguide/setting-up-installing-linux-prereq.html
 
+return if [
+  !node['conditions']['dcv_supported'],
+  node['cfncluster']['cfn_node_type'] != "MasterServer"
+].any?
+
 # Configure the system to enable NICE DCV to have direct access to the Linux server's GPU and enable GPU sharing.
 def allow_gpu_acceleration
   # On CentOS 7 fix circular dependency multi-user.target -> cloud-init-> isolate multi-user.target.
@@ -75,70 +80,67 @@ def allow_gpu_acceleration
   end
 end
 
-if node['cfncluster']['dcv']['supported_os'].include?("#{node['platform']}#{node['platform_version'].to_i}") && node['cfncluster']['cfn_node_type'] == "MasterServer"
+# be sure to have DCV packages installed
+include_recipe "aws-parallelcluster::dcv_install"
 
-  # be sure to have DCV packages installed
-  include_recipe "aws-parallelcluster::dcv_install"
+node.default['cfncluster']['dcv']['is_graphic_instance'] = graphic_instance?
 
-  node.default['cfncluster']['dcv']['is_graphic_instance'] = graphic_instance?
+if node.default['cfncluster']['dcv']['is_graphic_instance']
+  # Enable graphic acceleration in dcv conf file for graphic instances.
+  allow_gpu_acceleration
+end
 
-  if node.default['cfncluster']['dcv']['is_graphic_instance']
-    # Enable graphic acceleration in dcv conf file for graphic instances.
-    allow_gpu_acceleration
-  end
-
-  case node['platform']
-  when 'ubuntu'
-    # Disable RNDFILE from openssl to avoid error during certificate generation
-    # See https://github.com/openssl/openssl/issues/7754#issuecomment-444063355
-    execute 'No RND' do
-      user 'root'
-      command "sed --in-place '/RANDFILE/d' /etc/ssl/openssl.cnf"
-    end
-  end
-
-  # Install utility file to generate HTTPs certificates for the DCV external authenticator and generate a new one
-  cookbook_file "/etc/parallelcluster/generate_certificate.sh" do
-    source 'dcv/generate_certificate.sh'
-    owner 'root'
-    mode '0700'
-  end
-  execute "certificate generation" do
-    # args to the script represent:
-    # * path to certificate
-    # * path to private key
-    # * user to make owner of the two files
-    # * group to make owner of the two files
-    # NOTE: the last arg is hardcoded to be 'dcv' so that the dcvserver can read the files when authenticating
-    command "/etc/parallelcluster/generate_certificate.sh \"#{node['cfncluster']['dcv']['authenticator']['certificate']}\" \"#{node['cfncluster']['dcv']['authenticator']['private_key']}\" #{node['cfncluster']['dcv']['authenticator']['user']} dcv"
+case node['platform']
+when 'ubuntu'
+  # Disable RNDFILE from openssl to avoid error during certificate generation
+  # See https://github.com/openssl/openssl/issues/7754#issuecomment-444063355
+  execute 'No RND' do
     user 'root'
+    command "sed --in-place '/RANDFILE/d' /etc/ssl/openssl.cnf"
   end
+end
 
-  # Generate dcv.conf starting from template
-  template "/etc/dcv/dcv.conf" do
-    action :create
-    source 'dcv.conf.erb'
-    owner 'root'
-    group 'root'
-    mode '0755'
-  end
+# Install utility file to generate HTTPs certificates for the DCV external authenticator and generate a new one
+cookbook_file "/etc/parallelcluster/generate_certificate.sh" do
+  source 'dcv/generate_certificate.sh'
+  owner 'root'
+  mode '0700'
+end
+execute "certificate generation" do
+  # args to the script represent:
+  # * path to certificate
+  # * path to private key
+  # * user to make owner of the two files
+  # * group to make owner of the two files
+  # NOTE: the last arg is hardcoded to be 'dcv' so that the dcvserver can read the files when authenticating
+  command "/etc/parallelcluster/generate_certificate.sh \"#{node['cfncluster']['dcv']['authenticator']['certificate']}\" \"#{node['cfncluster']['dcv']['authenticator']['private_key']}\" #{node['cfncluster']['dcv']['authenticator']['user']} dcv"
+  user 'root'
+end
 
-  # Create directory for the external authenticator to store access file created by the users
-  directory '/var/spool/parallelcluster/pcluster_dcv_authenticator' do
-    owner node['cfncluster']['dcv']['authenticator']['user']
-    mode '1733'
-    recursive true
-  end
+# Generate dcv.conf starting from template
+template "/etc/dcv/dcv.conf" do
+  action :create
+  source 'dcv.conf.erb'
+  owner 'root'
+  group 'root'
+  mode '0755'
+end
 
-  # Install DCV external authenticator
-  cookbook_file "#{node['cfncluster']['dcv']['authenticator']['user_home']}/pcluster_dcv_authenticator.py" do
-    source 'dcv/pcluster_dcv_authenticator.py'
-    owner node['cfncluster']['dcv']['authenticator']['user']
-    mode '0700'
-  end
+# Create directory for the external authenticator to store access file created by the users
+directory '/var/spool/parallelcluster/pcluster_dcv_authenticator' do
+  owner node['cfncluster']['dcv']['authenticator']['user']
+  mode '1733'
+  recursive true
+end
 
-  # Start NICE DCV server
-  service "dcvserver" do
-    action %i[enable start]
-  end
+# Install DCV external authenticator
+cookbook_file "#{node['cfncluster']['dcv']['authenticator']['user_home']}/pcluster_dcv_authenticator.py" do
+  source 'dcv/pcluster_dcv_authenticator.py'
+  owner node['cfncluster']['dcv']['authenticator']['user']
+  mode '0700'
+end
+
+# Start NICE DCV server
+service "dcvserver" do
+  action %i[enable start]
 end

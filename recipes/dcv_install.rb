@@ -15,7 +15,11 @@
 # This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
 
-return if node['conditions']['ami_bootstrapped']
+return if [
+  !node['conditions']['dcv_supported'],
+  node['conditions']['ami_bootstrapped'],
+  File.exist?("/etc/dcv/dcv.conf")
+].any?
 
 # Utility function to install a list of packages
 def install_package_list(packages)
@@ -70,134 +74,132 @@ cookbook_file "#{node['cfncluster']['scripts_dir']}/pcluster_dcv_connect.sh" do
   not_if { ::File.exist?("#{node['cfncluster']['scripts_dir']}/pcluster_dcv_connect.sh") }
 end
 
-if node['cfncluster']['dcv']['supported_os'].include?("#{node['platform']}#{node['platform_version'].to_i}") && !File.exist?("/etc/dcv/dcv.conf")
-  case node['cfncluster']['cfn_node_type']
-  when 'MasterServer', nil
-    dcv_tarball = "#{node['cfncluster']['sources_dir']}/dcv-#{node['cfncluster']['dcv']['version']}.tgz"
+case node['cfncluster']['cfn_node_type']
+when 'MasterServer', nil
+  dcv_tarball = "#{node['cfncluster']['sources_dir']}/dcv-#{node['cfncluster']['dcv']['version']}.tgz"
 
-    # Install DCV pre-requisite packages
-    case node['platform']
-    when 'centos'
-      # Install the desktop environment and the desktop manager packages
-      execute 'Install gnome desktop' do
-        command 'yum -y install @gnome'
-      end
-      # Install X Window System (required when using GPU acceleration)
-      package "xorg-x11-server-Xorg"
-
-    when 'ubuntu'
-      apt_update
-      # Must install whoopsie separately before installing ubuntu-desktop to avoid whoopsie crash pop-up
-      package 'whoopsie' do
-        retries 3
-        retry_delay 5
-      end
-      # Install the desktop environment and the desktop manager packages
-      prereq_packages = %w[ubuntu-desktop lightdm mesa-utils]
-      package prereq_packages do
-        retries 10
-        retry_delay 5
-      end
-      # Must purge ifupdown before creating the AMI or the instance will have an ssh failure
-      package 'ifupdown' do
-        action :purge
-      end
-      bash 'setup pre-req' do
-        cwd Chef::Config[:file_cache_path]
-        code <<-PREREQ
-          set -e
-          wget https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
-          gpg --import NICE-GPG-KEY
-        PREREQ
-      end
-
-    when 'amazon'
-      prereq_packages = %w[gdm gnome-session gnome-classic-session gnome-session-xsession
-                           xorg-x11-server-Xorg xorg-x11-fonts-Type1 xorg-x11-drivers
-                           gnome-terminal gnu-free-fonts-common gnu-free-mono-fonts
-                           gnu-free-sans-fonts gnu-free-serif-fonts glx-utils]
-      package prereq_packages do
-        retries 10
-        retry_delay 5
-      end
-
-      # Use Gnome in place of Gnome-classic
-      file "Setup Gnome standard" do
-        content "PREFERRED=/usr/bin/gnome-session"
-        owner "root"
-        group "root"
-        mode "0755"
-        path "/etc/sysconfig/desktop"
-      end
-
+  # Install DCV pre-requisite packages
+  case node['platform']
+  when 'centos'
+    # Install the desktop environment and the desktop manager packages
+    execute 'Install gnome desktop' do
+      command 'yum -y install @gnome'
     end
-    disable_lock_screen
+    # Install X Window System (required when using GPU acceleration)
+    package "xorg-x11-server-Xorg"
 
-    # Extract DCV packages
-    unless File.exist?(dcv_tarball)
-      remote_file dcv_tarball do
-        source node['cfncluster']['dcv']['url']
-        mode '0644'
-        retries 3
-        retry_delay 5
-      end
+  when 'ubuntu'
+    apt_update
+    # Must install whoopsie separately before installing ubuntu-desktop to avoid whoopsie crash pop-up
+    package 'whoopsie' do
+      retries 3
+      retry_delay 5
+    end
+    # Install the desktop environment and the desktop manager packages
+    prereq_packages = %w[ubuntu-desktop lightdm mesa-utils]
+    package prereq_packages do
+      retries 10
+      retry_delay 5
+    end
+    # Must purge ifupdown before creating the AMI or the instance will have an ssh failure
+    package 'ifupdown' do
+      action :purge
+    end
+    bash 'setup pre-req' do
+      cwd Chef::Config[:file_cache_path]
+      code <<-PREREQ
+        set -e
+        wget https://d1uj6qtbmh3dt5.cloudfront.net/NICE-GPG-KEY
+        gpg --import NICE-GPG-KEY
+      PREREQ
+    end
 
-      # Verify checksum of dcv package
-      ruby_block "verify dcv checksum" do
-        block do
-          require 'digest'
-          checksum = Digest::SHA256.file(dcv_tarball).hexdigest
-          if checksum != node['cfncluster']['dcv']['sha256sum']
-            raise "Downloaded DCV package checksum #{checksum} does not match expected checksum #{node['cfncluster']['dcv']['package']['sha256sum']}"
-          end
+  when 'amazon'
+    prereq_packages = %w[gdm gnome-session gnome-classic-session gnome-session-xsession
+                         xorg-x11-server-Xorg xorg-x11-fonts-Type1 xorg-x11-drivers
+                         gnome-terminal gnu-free-fonts-common gnu-free-mono-fonts
+                         gnu-free-sans-fonts gnu-free-serif-fonts glx-utils]
+    package prereq_packages do
+      retries 10
+      retry_delay 5
+    end
+
+    # Use Gnome in place of Gnome-classic
+    file "Setup Gnome standard" do
+      content "PREFERRED=/usr/bin/gnome-session"
+      owner "root"
+      group "root"
+      mode "0755"
+      path "/etc/sysconfig/desktop"
+    end
+
+  end
+  disable_lock_screen
+
+  # Extract DCV packages
+  unless File.exist?(dcv_tarball)
+    remote_file dcv_tarball do
+      source node['cfncluster']['dcv']['url']
+      mode '0644'
+      retries 3
+      retry_delay 5
+    end
+
+    # Verify checksum of dcv package
+    ruby_block "verify dcv checksum" do
+      block do
+        require 'digest'
+        checksum = Digest::SHA256.file(dcv_tarball).hexdigest
+        if checksum != node['cfncluster']['dcv']['sha256sum']
+          raise "Downloaded DCV package checksum #{checksum} does not match expected checksum #{node['cfncluster']['dcv']['package']['sha256sum']}"
         end
       end
-
-      bash 'extract dcv packages' do
-        cwd node['cfncluster']['sources_dir']
-        code "tar -xvzf #{dcv_tarball}"
-      end
     end
 
-    # Install server and xdcv packages
-    dcv_packages = %W[#{node['cfncluster']['dcv']['server']} #{node['cfncluster']['dcv']['xdcv']}]
-    dcv_packages_path = "#{node['cfncluster']['sources_dir']}/#{node['cfncluster']['dcv']['package']}/"
-    # Rewrite dcv_packages object by cycling each package file name and appending the path to them
-    dcv_packages.map! { |package| dcv_packages_path + package }
-    install_package_list(dcv_packages)
-
-    # Create user and Python virtual env for the external authenticator
-    user node['cfncluster']['dcv']['authenticator']['user'] do
-      manage_home true
-      home node['cfncluster']['dcv']['authenticator']['user_home']
-      comment 'NICE DCV External Authenticator user'
-      system true
-      shell '/bin/bash'
-    end
-    install_ext_auth_virtual_env
-
-  when 'ComputeFleet'
-    user node['cfncluster']['dcv']['authenticator']['user'] do
-      manage_home false
-      home node['cfncluster']['dcv']['authenticator']['user_home']
-      comment 'NICE DCV External Authenticator user'
-      system true
-      shell '/bin/bash'
+    bash 'extract dcv packages' do
+      cwd node['cfncluster']['sources_dir']
+      code "tar -xvzf #{dcv_tarball}"
     end
   end
 
-  # Post-installation action
-  case node['platform']
-  when 'centos'
-    # stop firewall
-    service "firewalld" do
-      action %i[disable stop]
-    end
+  # Install server and xdcv packages
+  dcv_packages = %W[#{node['cfncluster']['dcv']['server']} #{node['cfncluster']['dcv']['xdcv']}]
+  dcv_packages_path = "#{node['cfncluster']['sources_dir']}/#{node['cfncluster']['dcv']['package']}/"
+  # Rewrite dcv_packages object by cycling each package file name and appending the path to them
+  dcv_packages.map! { |package| dcv_packages_path + package }
+  install_package_list(dcv_packages)
 
-    # Disable selinux
-    selinux_state "SELinux Disabled" do
-      action :disabled
-      only_if 'which getenforce'
-    end
+  # Create user and Python virtual env for the external authenticator
+  user node['cfncluster']['dcv']['authenticator']['user'] do
+    manage_home true
+    home node['cfncluster']['dcv']['authenticator']['user_home']
+    comment 'NICE DCV External Authenticator user'
+    system true
+    shell '/bin/bash'
+  end
+  install_ext_auth_virtual_env
+
+when 'ComputeFleet'
+  user node['cfncluster']['dcv']['authenticator']['user'] do
+    manage_home false
+    home node['cfncluster']['dcv']['authenticator']['user_home']
+    comment 'NICE DCV External Authenticator user'
+    system true
+    shell '/bin/bash'
+  end
+end
+
+# Post-installation action
+case node['platform']
+when 'centos'
+  # stop firewall
+  service "firewalld" do
+    action %i[disable stop]
+  end
+
+  # Disable selinux
+  selinux_state "SELinux Disabled" do
+    action :disabled
+    only_if 'which getenforce'
   end
 end
