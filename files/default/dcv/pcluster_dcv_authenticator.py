@@ -384,7 +384,7 @@ class DCVAuthenticator(BaseHTTPRequestHandler):
 
         return (
             fields[command_index].endswith("/dcv/dcvagent")
-            and fields[user_index] == user
+            and fields[user_index] in [user, "root", "dcv"]
             and fields[session_name_index] == session_id
         )
 

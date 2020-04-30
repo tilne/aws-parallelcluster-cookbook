@@ -19,4 +19,7 @@ cfn_master=<%= node['cfncluster']['cfn_master'] %>
 <% end -%>
 <% if node['cfncluster']['cfn_node_type'] == 'MasterServer' -%>
 cfn_volume=<%= node['cfncluster']['cfn_volume'] %>
+<% if node['cfncluster']['dcv_enabled'] == "master" && node['cfncluster']['dcv']['supported_os'].include?("#{node['platform']}#{node['platform_version'].to_i}") -%>
+cfn_dcv_session_type=<%= node['cfncluster']['dcv']['session_type'] %>
+<% end -%>
 <% end -%>

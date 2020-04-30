@@ -80,6 +80,7 @@ default['cfncluster']['env2']['url'] = 'https://sourceforge.net/projects/env2/fi
 default['cfncluster']['dcv']['installed'] = 'yes'
 default['cfncluster']['dcv']['version'] = '2019.1-7644'
 default['cfncluster']['dcv']['supported_os'] = %w[centos7 ubuntu18 amazon2]
+default['cfncluster']['dcv']['session_type'] = 'console'
 case "#{node['platform']}#{node['platform_version'].to_i}"
 when 'centos7', 'amazon2'
   default['cfncluster']['dcv']['package'] = "nice-dcv-#{node['cfncluster']['dcv']['version']}-el7"

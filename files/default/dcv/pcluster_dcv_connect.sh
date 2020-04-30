@@ -39,6 +39,8 @@ DCV_SESSION_FOLDER="${HOME}/.parallelcluster/dcv"
 LOG_FILE_PATH="/var/log/parallelcluster/pcluster_dcv_connect.log"
 LOG_FILE_MAX_SIZE=5242880 # 5MB
 
+source /etc/parallelcluster/cfnconfig  # to get cfn_dcv_session_type
+
 
 _fail() {
   message=$1
@@ -94,7 +96,12 @@ _create_dcv_session() {
     # Generate a random session id
     sessionid=$(shuf -zer -n20  {A..Z} {a..z} {0..9})
     echo "${sessionid}" > "${dcv_session_file}"
-    dcv create-session --type virtual --storage-root "${shared_folder_path}" "${sessionid}"
+    _log "Creating a session of type ${cfn_dcv_session_type}"
+    if [ "${cfn_dcv_session_type}" == "virtual" ]; then
+        dcv create-session --type virtual --storage-root "${shared_folder_path}" "${sessionid}"
+    else
+        sudo dcv create-session --type console --owner $(whoami) --storage-root "${shared_folder_path}" "${sessionid}"
+    fi
     _log "NICE DCV session created successfully."
 
     echo "${sessionid}"
@@ -130,7 +137,11 @@ main() {
         _log "Reusing existing NICE DCV session for the current user."
 
         # number of session can either be 0 or 1
-        number_of_sessions=$(dcv list-sessions |& grep "${user}" | grep -c "${sessionid}")
+        if [ "${cfn_dcv_session_type}" == "virtual" ]; then
+            number_of_sessions=$(dcv list-sessions |& grep "${user}" | grep -c "${sessionid}")
+        else
+            number_of_sessions=$(sudo dcv list-sessions |& grep "${user}" | grep -c "${sessionid}")
+        fi
         if (( number_of_sessions == 0 )); then
             # There is no running session (e.g. the system has been rebooted)
             _log "There are no running sessions for the current user, creating a new one.."
