@@ -22,7 +22,8 @@
     "parallelcluster_ref" : "{{env `PARALLELCLUSTER_REF`}}",
     "parallelcluster_cookbook_ref" : "{{env `PARALLELCLUSTER_COOKBOOK_REF`}}",
     "parallelcluster_node_ref" : "{{env `PARALLELCLUSTER_NODE_REF`}}",
-    "ami_arch" : "{{env `AMI_ARCH`}}"
+    "ami_arch" : "{{env `AMI_ARCH`}}",
+    "cinc_client": "{{env `CINC_CLIENT`}}"
   },
   "builders" : [
     {
@@ -176,13 +177,14 @@
       "type" : "shell",
       "inline" : [
         "region=\"{{user `region`}}\"",
-        "curl --retry 3 -L https://${region}-aws-parallelcluster.s3.${region}.amazonaws.com$([ \"${region}\" != \"${region#cn-*}\" ] && echo \".cn\")/archives/chef/chef-install.sh | sudo bash -s -- -v {{user `chef_version`}}"
+        "wget https://tilne-testcluster.s3-us-west-1.amazonaws.com/cinc-packages/{{user `cinc_client`}}",
+        "sudo yum install -y ./{{user `cinc_client`}}"
       ]
     },
     {
       "type" : "shell",
       "inline" : [
-        "sudo /opt/chef/embedded/bin/gem install --no-rdoc --no-ri ridley:{{user `ridley_version`}} berkshelf:{{user `berkshelf_version`}} ffi-libarchive"
+        "sudo /opt/cinc/embedded/bin/gem install ridley:{{user `ridley_version`}} berkshelf:{{user `berkshelf_version`}} ffi-libarchive"
       ]
     },
     {
@@ -208,6 +210,15 @@
       "expect_disconnect" : "true",
       "inline" : [
         "sudo reboot"
+      ]
+    },
+    {
+      "type" : "shell",
+      "inline" : [
+        "sudo sed -i 's/action.*:checkout if.*/enable_checkout false/' /etc/chef/cookbooks/pyenv/resources/system_install.rb",
+        "cat /etc/chef/cookbooks/pyenv/resources/system_install.rb",
+        "sudo sed -i 's/action.*:sync/enable_checkout false/' /etc/chef/cookbooks/pyenv/resources/plugin.rb",
+        "cat /etc/chef/cookbooks/pyenv/resources/plugin.rb"
       ]
     },
     {
