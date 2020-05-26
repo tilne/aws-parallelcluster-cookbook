@@ -8,7 +8,7 @@ description 'Installs/Configures AWS ParallelCluster'
 long_description 'Installs/Configures AWS ParallelCluster'
 issues_url 'https://github.com/aws/aws-parallelcluster-cookbook/issues'
 source_url 'https://github.com/aws/aws-parallelcluster-cookbook'
-chef_version '14.2.0'
+chef_version '>= 15.0.0'
 version '2.7.0'
 
 supports 'amazon'
