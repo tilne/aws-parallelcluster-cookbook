@@ -227,16 +227,6 @@
     },
     {
       "type" : "shell",
-      "inline" : [
-        "sudo sed -i 's/action.*:checkout if.*/enable_checkout false/' /etc/chef/cookbooks/pyenv/resources/system_install.rb",
-        "cat /etc/chef/cookbooks/pyenv/resources/system_install.rb",
-        "sudo sed -i 's/action.*:sync/enable_checkout false/' /etc/chef/cookbooks/pyenv/resources/plugin.rb",
-        "cat /etc/chef/cookbooks/pyenv/resources/plugin.rb",
-        "for f in `ls /etc/chef/cookbooks/line/resources` ; do sudo sed -i 's/resource_name :/provides :/' /etc/chef/cookbooks/line/resources/$f  ; done"
-      ]
-    },
-    {
-      "type" : "shell",
       "only": ["ubuntu1604"],
       "expect_disconnect" : "true",
       "inline" : [

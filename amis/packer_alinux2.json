@@ -213,15 +213,6 @@
       ]
     },
     {
-      "type" : "shell",
-      "inline" : [
-        "sudo sed -i 's/action.*:checkout if.*/enable_checkout false/' /etc/chef/cookbooks/pyenv/resources/system_install.rb",
-        "cat /etc/chef/cookbooks/pyenv/resources/system_install.rb",
-        "sudo sed -i 's/action.*:sync/enable_checkout false/' /etc/chef/cookbooks/pyenv/resources/plugin.rb",
-        "cat /etc/chef/cookbooks/pyenv/resources/plugin.rb"
-      ]
-    },
-    {
       "type" : "chef-solo",
       "only": ["alinux2"],
       "pause_before": "2m",
