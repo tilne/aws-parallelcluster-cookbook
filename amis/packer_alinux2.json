@@ -22,8 +22,7 @@
     "parallelcluster_ref" : "{{env `PARALLELCLUSTER_REF`}}",
     "parallelcluster_cookbook_ref" : "{{env `PARALLELCLUSTER_COOKBOOK_REF`}}",
     "parallelcluster_node_ref" : "{{env `PARALLELCLUSTER_NODE_REF`}}",
-    "ami_arch" : "{{env `AMI_ARCH`}}",
-    "cinc_client": "{{env `CINC_CLIENT`}}"
+    "ami_arch" : "{{env `AMI_ARCH`}}"
   },
   "builders" : [
     {
@@ -177,8 +176,7 @@
       "type" : "shell",
       "inline" : [
         "region=\"{{user `region`}}\"",
-        "wget https://tilne-testcluster.s3-us-west-1.amazonaws.com/cinc-packages/{{user `cinc_client`}}",
-        "sudo yum install -y ./{{user `cinc_client`}}"
+        "curl --retry 3 -L https://tilne-testcluster.s3.us-west-1.amazonaws.com/archives/cinc/cinc-install.sh | sudo bash -s -- -v {{user `chef_version`}}"
       ]
     },
     {
