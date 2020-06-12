@@ -665,7 +665,15 @@ fi
 # $sha256:
 ############
 
-bucket_url="https://${region}-aws-parallelcluster.s3.${region}.${download_domain}/archives/${project}/${platform}/${platform_version}/"
+bucket_url="https://tilne-testcluster.s3.us-west-1.${download_domain}/archives/${project}/${platform}/${platform_version}/"
+
+# AL2: cinc-15.11.3-1.el7.aarch64.rpm
+# archives/cinc/el/7/cinc-15.11.3-1.el7.aarch64.rpm
+# U16: cinc_15.11.3-1_arm64.deb
+# archives/cinc/ubuntu/16.04/cinc_15.11.3-1_arm64.deb
+# U16: cinc_15.11.3-1_arm64.deb
+# archives/cinc/ubuntu/18.04/cinc_15.11.3-1_arm64.deb
+
 
 if test "x$build" = "x"; then
   # Build version set to 1 by default if not specified
