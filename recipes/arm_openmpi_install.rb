@@ -15,6 +15,8 @@
 # OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions and
 # limitations under the License.
 
+return unless arm_instance?
+
 openmpi_modules_dir = "#{node['cfncluster']['moduleshome']}/modulefiles/openmpi"
 
 case node['platform_family']
