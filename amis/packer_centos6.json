@@ -183,13 +183,13 @@
       "type" : "shell",
       "inline" : [
         "region=\"{{user `region`}}\"",
-        "curl --retry 3 -L https://${region}-aws-parallelcluster.s3.${region}.amazonaws.com$([ \"${region}\" != \"${region#cn-*}\" ] && echo \".cn\")/archives/chef/chef-install.sh | sudo bash -s -- -v {{user `chef_version`}}"
+        "curl --retry 3 -L https://us-east-1-aws-parallelcluster.s3.us-east-1.amazonaws.com/archives/cinc/cinc-install.sh | sudo bash -s -- -v {{user `chef_version`}}"
       ]
     },
     {
       "type" : "shell",
       "inline" : [
-        "sudo /opt/chef/embedded/bin/gem install --no-rdoc --no-ri ridley:{{user `ridley_version`}} berkshelf:{{user `berkshelf_version`}} ffi-libarchive"
+        "sudo /opt/cinc/embedded/bin/gem install ridley:{{user `ridley_version`}} berkshelf:{{user `berkshelf_version`}} ffi-libarchive"
       ]
     },
     {
