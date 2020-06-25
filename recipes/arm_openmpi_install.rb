@@ -20,27 +20,29 @@ return unless arm_instance?
 openmpi_modules_dir = "#{node['cfncluster']['moduleshome']}/modulefiles/openmpi"
 
 case node['platform_family']
-when 'amazon'
-  if node['platform_version'].to_i == 2
-    package 'openmpi-devel' do
-      retries 3
-      retry_delay 5
-    end
-    # The above package creates the modulefile in /etc/modulefiles/mpi/openmpi-aarch64.
-    # Create a symbolic link from $MODULESHOME/modulefiles/openmpi/${VERSION} to this file
-    # to more closely mimic the user experience provided on x86_64 AMIs.
-    directory openmpi_modules_dir do
-      mode '755'
-      owner 'root'
-      group 'root'
-      action :create
-    end
-    openmpi_version = "4.0.1"
-    link "#{openmpi_modules_dir}/#{openmpi_version}" do
-      to "/etc/modulefiles/mpi/openmpi-aarch64"
-    end
+when 'rhel', 'amazon'
+  if node['platform_family'] == 'amazon' && node['platform_version'].to_i == 2
+    openmpi_version = '4.0.1'
+  elsif node['platform'] == 'centos' && node['platform_version'].to_i == 7
+    openmpi_version = '1.10.7'
   else
-    Chef::Log.Info("ARM instances are currently only supported for Amazon Linux 2")
+    Chef::Log.Info("ARM instances are currently only supported for Amazon Linux 2 and CentOS 7")
+  end
+  package 'openmpi-devel' do
+    retries 3
+    retry_delay 5
+  end
+  # The above package creates the modulefile in /etc/modulefiles/mpi/openmpi-aarch64.
+  # Create a symbolic link from $MODULESHOME/modulefiles/openmpi/${VERSION} to this file
+  # to more closely mimic the user experience provided on x86_64 AMIs.
+  directory openmpi_modules_dir do
+    mode '755'
+    owner 'root'
+    group 'root'
+    action :create
+  end
+  link "#{openmpi_modules_dir}/#{openmpi_version}" do
+    to "/etc/modulefiles/mpi/openmpi-aarch64"
   end
 when 'debian'
   if node['platform_version'] == "18.04"

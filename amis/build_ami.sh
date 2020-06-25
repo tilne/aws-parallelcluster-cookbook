@@ -121,8 +121,8 @@ parse_options() {
 check_options() {
     set -e
 
-    available_arm_os="ubuntu1804 alinux2"  # subset of supported OSes for which ARM AMIs are available
-    available_os="centos6 centos7 alinux ubuntu1604 ${available_arm_os}"
+    available_arm_os="ubuntu1804 alinux2 centos7"  # subset of supported OSes for which ARM AMIs are available
+    available_os="centos6 alinux ubuntu1604 ${available_arm_os}"
     cwd="$(dirname $0)"
     tmp_dir=$(mktemp -d)
     export VENDOR_PATH="${tmp_dir}/vendor/cookbooks"
@@ -191,8 +191,8 @@ check_options() {
     esac
 
     # Ensure the specified architecture-OS combination is valid
-    if [ "${_arch}" == "arm64" ] && [[ "${_os}" =~ ^centos[0-9]+ ]]; then
-      echo "Currently there are no CentOS arm64 AMIs available."
+    if [ "${_arch}" == "arm64" ] && [ "${_os}" == "centos6" ]; then
+      echo "Currently there are no CentOS 6 arm64 AMIs available."
       exit 1
     elif [ "${_arch}" == "arm64" ] && [ "${_os}" == "alinux" ]; then
       echo "Currently there are no alinux (AL1) arm64 AMIs available."
@@ -202,7 +202,7 @@ check_options() {
       echo "See https://docs.chef.io/platforms/."
       exit 1
     elif [ "${_arch}" == "arm64" ] && [ "${_os}" == "all" ]; then
-      echo "Not building for any CentOS versions or alinux (AL1) because there are no arm64 AMIs available."
+      echo "Only building for OSes supported for ARM: ${available_arm_os}"
       available_os="${available_arm_os}"
     fi
 }
