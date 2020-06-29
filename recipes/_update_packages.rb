@@ -23,15 +23,15 @@ unless node['platform'] == 'centos' && node['platform_version'].to_i < 7
       command "yum -y update && package-cleanup -y --oldkernels --count=1"
     end
   when 'debian'
-    apt_update
-    execute 'apt-upgrade' do
-      command "DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" --with-new-pkgs upgrade && apt-get autoremove -y"
-      retries 3
-      retry_delay 5
-    end
-    package 'linux-aws' do
-      retries 3
-      retry_delay 5
-    end
+    # apt_update
+    # execute 'apt-upgrade' do
+    #   command "DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" --with-new-pkgs upgrade && apt-get autoremove -y"
+    #   retries 3
+    #   retry_delay 5
+    # end
+    # package 'linux-aws' do
+    #   retries 3
+    #   retry_delay 5
+    # end
   end
 end

@@ -31,16 +31,7 @@
       "name" : "ubuntu1804",
       "type" : "amazon-ebs",
       "region" : "{{user `region`}}",
-      "source_ami_filter": {
-        "filters": {
-          "virtualization-type": "hvm",
-          "name": "ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-*-server-*",
-          "root-device-type": "ebs",
-          "architecture": "{{user `ami_arch`}}"
-        },
-        "owners": ["099720109477", "513442679011", "837727238323"],
-        "most_recent": true
-      },
+      "source_ami": "ami-0d221091ef7082bcf",
       "ami_regions" : "{{user `build_for`}}",
       "ami_groups" : "{{user `ami_perms`}}",
       "instance_type" : "{{user `instance_type`}}",
