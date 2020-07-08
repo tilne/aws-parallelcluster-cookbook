@@ -1,0 +1,30 @@
+[submodule "apt"]
+	url = https://github.com/chef-cookbooks/apt
+	path = deps/apt-7.3.0
+[submodule "chef-cookbook-hostname"]
+	url = https://github.com/3ofcoins/chef-cookbook-hostname
+	path = deps/hostname-0.4.2
+[submodule "cookbook-nfs"]
+	url = https://github.com/atomic-penguin/cookbook-nfs
+	path = deps/nfs-2.6.4
+[submodule "line"]
+	url = https://github.com/sous-chefs/line
+	path = deps/line-2.9.0
+[submodule "openssh"]
+	url = https://github.com/chef-cookbooks/openssh
+	path = deps/openssh-2.8.1
+[submodule "pyenv"]
+	url = https://github.com/sous-chefs/pyenv
+	path = deps/pyenv-3.1.1
+[submodule "selinux"]
+	url = https://github.com/chef-cookbooks/selinux
+	path = deps/selinux-2.1.1
+[submodule "chef-ulimit"]
+	url = https://github.com/bmhatfield/chef-ulimit
+	path = deps/ulimit-1.0.0
+[submodule "yum"]
+	url = https://github.com/chef-cookbooks/yum
+	path = deps/yum-5.1.0
+[submodule "yum-epel"]
+	url = https://github.com/chef-cookbooks/yum-epel
+	path = deps/yum-epel-3.3.0
