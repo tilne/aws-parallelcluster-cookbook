@@ -84,7 +84,6 @@ default['cfncluster']['efa']['installer_url'] = 'https://s3-us-west-2.amazonaws.
 # NICE DCV
 default['cfncluster']['dcv']['installed'] = 'yes'
 default['cfncluster']['dcv']['version'] = '2020.0-8428'
-default['cfncluster']['dcv']['supported_os'] = %w[centos7 ubuntu18 amazon2]
 
 case "#{node['platform']}#{node['platform_version'].to_i}"
 when 'centos7', 'amazon2'

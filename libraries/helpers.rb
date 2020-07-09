@@ -187,10 +187,26 @@ def platform_supports_intel_hpc_platform?
 end
 
 #
-# Check if DCV is supported on this OS
+# Check if DCV is supported on this OS-architecture combination
 #
-def platform_supports_dcv?
-  node['cfncluster']['dcv']['supported_os'].include?("#{node['platform']}#{node['platform_version'].to_i}")
+def platform_supports_dcv_for_architecture?
+  [arm_instance? && platform_supports_dcv_on_arm64?,
+   !arm_instance? && platform_supports_dcv_on_x86_64?].any?
+end
+
+#
+# Check if DCV is supported for x86_64 instances on this OS
+#
+def platform_supports_dcv_on_x86_64?
+  [node['platform'] == 'centos' && node['platform_version'].to_i == 7,
+   node['platform'] == 'amazon' && node['platform_version'].to_i == 2,
+   node['platform'] == 'ubuntu' && node['platform_version'].to_i == 18].any?
+end
+
+#
+# Check if DCV is supported for arm64 instances on this OS
+def platform_supports_dcv_on_arm64?
+  node['platform'] == 'ubuntu' && node['platform_version'].to_i == 18
 end
 
 #
