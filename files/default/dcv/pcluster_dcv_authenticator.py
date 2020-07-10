@@ -377,9 +377,12 @@ class DCVAuthenticator(BaseHTTPRequestHandler):
         # row example:
         # centos 63 0.0 0.0 4348844 3108   ??  Ss   23Jul19   2:32.46  /usr/libexec/dcv/dcvagent --session-id mysession
         # ubuntu 2949 0.3 0.4 860568 34328 ? Sl 20:10 0:18 /usr/lib/x86_64-linux-gnu/dcv/dcvagent --session-id mysession
+        # TODO: on pre-release arm ubuntu18 version, it actually looks like this:
+        #       need to figure out if this is consistent
+        # ubuntu 10927 0.2 0.0 1866380 59760 ? Sl 01:05 0:01 /usr/lib/aarch64-linux-gnu/dcv/dcvagent --mode full --session-id Z3mIEssPPCSWxZDD7q2r --display :0 --settings-path /etc/dcv/dcv.conf --log-level info --log-dir /var/log/dcv --log-rotate 10
         fields = row.split()
         command_index = 10
-        session_name_index = 12
+        session_name_index = 14
         user_index = 0
 
         return (
