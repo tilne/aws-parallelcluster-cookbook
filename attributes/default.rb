@@ -257,8 +257,8 @@ when 'rhel', 'amazon'
   # Config file used to set default MODULEPATH list
   default['cfncluster']['modulepath_config_file'] = value_for_platform(
     'centos' => {
-      '~>8' => '/etc/environment-modules/modulespath',
-      '~>7' => "#{node['cfncluster']['moduleshome']}/init/.modulespath"
+      '>=8.3' => '/etc/environment-modules/modulespath',
+      'default' => "#{node['cfncluster']['moduleshome']}/init/.modulespath"
     },
     'amazon' => { 'default' => "#{node['cfncluster']['moduleshome']}/init/.modulespath" }
   )
