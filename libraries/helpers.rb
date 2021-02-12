@@ -378,6 +378,10 @@ def add_package_repository(repo_name, baseurl, gpgkey, distribution)
       retries 3
       retry_delay 5
     end
+    execute 'apt-key update' do
+      retries 3
+      retry_delay 5
+    end
     apt_update 'update' do
       retries 3
       retry_delay 5
