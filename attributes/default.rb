@@ -122,13 +122,13 @@ default['cfncluster']['ganglia_enabled'] = 'no'
 
 # NVIDIA
 default['cfncluster']['nvidia']['enabled'] = 'no'
-default['cfncluster']['nvidia']['driver_version'] = '450.80.02'
-default['cfncluster']['nvidia']['driver_url'] = 'https://us.download.nvidia.com/tesla/450.80.02/NVIDIA-Linux-x86_64-450.80.02.run'
+default['cfncluster']['nvidia']['driver_version'] = '460.32.03'
+default['cfncluster']['nvidia']['driver_url'] = 'https://us.download.nvidia.com/tesla/460.32.03/NVIDIA-Linux-x86_64-460.32.03.run'
 default['cfncluster']['nvidia']['cuda_version'] = '11.0'
 default['cfncluster']['nvidia']['cuda_url'] = 'https://developer.download.nvidia.com/compute/cuda/11.0.2/local_installers/cuda_11.0.2_450.51.05_linux.run'
 
 # NVIDIA fabric-manager
-default['cfncluster']['nvidia']['fabricmanager']['package'] = "nvidia-fabricmanager-450"
+default['cfncluster']['nvidia']['fabricmanager']['package'] = "nvidia-fabricmanager-460"
 default['cfncluster']['nvidia']['fabricmanager']['repository_key'] = "7fa2af80.pub"
 default['cfncluster']['nvidia']['fabricmanager']['version'] = value_for_platform(
   'default' => node['cfncluster']['nvidia']['driver_version'],
